@@ -55,12 +55,9 @@ Make a plot that shows all of the couples.
 ggplot(season_details, aes(x=season, y=full_name, fill=still_together))+
   geom_col()+
   coord_flip()+
-  labs(title="Couples by Season", x="Season", y="Number of Couples")+
+  labs(title="Couple's Relationship Status by Season", x="Season", y="Name of Couples")+
   theme(axis.text.x=element_text(angle=90, hjust = 1))
 ```
-
-
-
 
 
 
@@ -109,6 +106,22 @@ contestants <- read.csv("contestant_details.csv")%>% clean_names()
 ```
 
 
+
+How many contestants are in each season?
+```{r}
+count(contestants, season)
+
+```
+Make a plot that shows the number of contestants in each season.
+```{r}
+ggplot(contestants, aes(x=season))+
+  geom_bar(fill = "darkred", alpha=0.8)+
+  labs(title="Number of Contestants by Season", x="Season", y="Number of Contestants")+
+  theme(axis.text.x = element_text(angle = 60, hjust = 1),
+        plot.title = element_text(size = 14, face="bold"))+
+  geom_text(stat = "count", aes(label = ..count..), vjust = -0.2, size = 3, color = "black")
+
+```
 
 
 
