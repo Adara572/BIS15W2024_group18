@@ -9,13 +9,18 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ## R Markdown
-
 ```{r}
-season_details <- read.csv("season_details.csv")
+library(tidyverse)
+library(janitor)
+library(here)
 ```
 
 ```{r}
-#glimpse(season_details)
+season_details <- read.csv("season_details.csv")%>% clean_names()
+```
+
+```{r}
+glimpse(season_details)
 ```
 
 ```{r}
@@ -23,28 +28,35 @@ head(season_details)
 ```
 
 ```{r}
-#still_together<- season_details%>%
-  #group_by(season, full_name, still_together)%>%
-  #filter(still_together=="TRUE")
+still_together<- season_details%>%
+  group_by(season, full_name, still_together)%>%
+  filter(still_together=="TRUE")
 ```
 
 ```{r}
-#count(still_together, season)
+count(still_together, season)
 ```
 Make a plot to show the number of couples still together by season. 
 ```{r}
-#ggplot(still_together, aes(x=season, y=full_name))+
-  #geom_col()+
-  #labs(title="Number of Couples Still Together by Season", x="Season", y="Number of Couples")+
-  #theme_minimal()
+ggplot(still_together, aes(x=season, y=full_name))+
+  geom_col(fill = "darkred", alpha=0.8)+
+  coord_flip()+
+  labs(title="Number of Couples Still Together by Season", x="Season", y="Number of Couples")+
+  theme(axis.text.x = element_text(angle = 60, hjust = 1),
+        plot.title = element_text(size = 14, face="bold"))+
+  geom_text(aes(label = season), vjust = -0.2, size = 3, color = "black")
+```
+```{r}
+colours()
 ```
 
 Make a plot that shows all of the couples.
 ```{r}
-#ggplot(season_details, aes(x=season, y=full_name, fill=still_together))+
-  #geom_col()+
-  #labs(title="Couples by Season", x="Season", y="Number of Couples")+
-  #theme_minimal()
+ggplot(season_details, aes(x=season, y=full_name, fill=still_together))+
+  geom_col()+
+  coord_flip()+
+  labs(title="Couples by Season", x="Season", y="Number of Couples")+
+  theme(axis.text.x=element_text(angle=90, hjust = 1))
 ```
 
 
@@ -57,27 +69,8 @@ Make a plot that shows all of the couples.
 
 
 
-
 ```{r}
-hometowns <- read.csv("hometown_coordinates.csv")
-```
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-```{r}
-eliminations <- read.csv("eliminations_and_dates.csv")
+hometowns <- read.csv("hometown_coordinates.csv")%>% clean_names()
 ```
 
 
@@ -93,8 +86,9 @@ eliminations <- read.csv("eliminations_and_dates.csv")
 
 
 
+
 ```{r}
-contestants <- read.csv("contestant_details.csv")
+eliminations <- read.csv("eliminations_and_dates.csv")%>% clean_names()
 ```
 
 
@@ -111,7 +105,24 @@ contestants <- read.csv("contestant_details.csv")
 
 
 ```{r}
-compact_eliminations <- read.csv("eliminations_and_dates_compact.csv")
+contestants <- read.csv("contestant_details.csv")%>% clean_names()
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+```{r}
+compact_eliminations <- read.csv("eliminations_and_dates_compact.csv") %>% clean_names()
 ```
 
 
