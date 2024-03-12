@@ -10,23 +10,168 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## R Markdown
 
+#questions were exploring 
+1. What is the average age of the contestants?
+2. What is the average age of the contestants by season?
+3. What is the success rate of the contestants by season?
+4.. What is the success rate of the contestants by hometown?
+5. What is the success rate of the contestants by hometown by season?
+6. What is the success rate of the contestants by age?
+7. Is there a correlation between the age of the contestant and the success rate?
+8. Is there a trend in occupation of the contestants?
 ```{r}
-Eliminations<- read.csv("../data/eliminations_and_dates.csv")
+Eliminations<- read.csv("eliminations_and_dates.csv") %>% clean_names()
+```
+
+
+```{r}
+Hometown<- read.csv("hometown_coordinates.csv") %>% clean_names()
+
 ```
 
 ```{r}
-Hometown<- read.csv("../data/hometown_coordinates.csv")
+Seasons<- read.csv("season_details.csv") %>% clean_names()
+```
+
+
+```{r}
+Contestants <- read.csv("contestant_details.csv") %>% clean_names()
 ```
 
 ```{r}
-Seasons<- read.csv("../data/season_details.csv")
+Compact_eliminations <- read.csv("eliminations_and_dates_compact.csv") %>% clean_names()
+```
+
+
+# what is the maximun and minimum age of the contestants?
+```{r}
+Contestants %>%
+  summarise(max_age = max(age, na.rm = TRUE),
+            min_age = min(age, na.rm = TRUE))
+```
+
+
+#1 What is the average age of the contestants?
+```{r}
+Contestants %>%
+  summarise(mean_age = mean(age, na.rm = TRUE))
+```
+# what is the average age of the contestants by season?
+```{r}
+Contestants %>%
+  group_by(season) %>%
+  summarise(mean_age = mean(age, na.rm = TRUE))
+```
+
+
+
+#build a graph that shows the average age of the contestants by season
+```{r}
+Contestants %>%
+  group_by(season) %>%
+  summarise(mean_age = mean(age, na.rm = TRUE)) %>%
+  ggplot(aes(x = season, y = mean_age)) +
+  geom_col() +
+  labs(title = "Average Age of Contestants by Season",
+       x = "Season",
+       y = "Average Age")
+```
+
+
+#make a table of all of the occupations of the contestants
+```{r}
+Contestants %>%
+  group_by(occupation) %>%
+  summarise(count = n()) %>%
+  arrange(desc(count))
+```
+
+# make a graph that shows the trend in occupation of the contestants, make the graph pink
+
+```{r}
+Contestants %>%
+  group_by(occupation) %>%
+  summarise(count = n()) %>%
+  arrange(desc(count)) %>%
+  top_n(10) %>%
+  ggplot(aes(x = reorder(occupation, count), y = count)) +
+  geom_col() +
+  coord_flip() +
+  labs(title = "Top 10 Occupations of Contestants",
+       x = "Occupation",
+       y = "Count")
+```
+
+#make a grapgh that show the trend in hometown of the contestants
+```{r}
+Contestants %>%
+  left_join(Hometown, by = c("hometown" = "city")) %>%
+  group_by(hometown) %>%
+  summarise(count = n()) %>%
+  arrange(desc(count)) %>%
+  top_n(10) %>%
+  ggplot(aes(x = reorder(hometown, count), y = count)) +
+  geom_col() +
+  coord_flip() +
+  labs(title = "Top 10 Hometowns of Contestants",
+       x = "Hometown",
+       y = "Count")
+
+```
+# make a map of the hometowns of the contestants
+
+```{r}
+register_stadiamaps("4592a21f-00fe-42be-b871-7a71b02c2a12", write = FALSE)
 ```
 
 ```{r}
-Contestants <- read.csv("../data/contestant_details.csv")
+Hometown %>% 
+  select(lat, long) %>% 
+  summary()
 ```
 
 ```{r}
-Compact_eliminations <- read.csv("../data/eliminations_and_dates_compact.csv")
+lat <- c(55.02, 70.37)
+long <- c(-166.2, -131.3)
+bbox <- make_bbox(long, lat, f = 0.03)
 ```
+
+```{r}
+map1 <- get_stadiamap(bbox, maptype = "stamen_terrain", zoom=7)
+```
+
+```{r}
+ggmap(map1) +
+  geom_point(data = grizzly, aes(longitude, latitude), size=0.4)+
+  labs(x="Longitude", y="Latitude", title= "Bear Locations")
+```
+
+```{r}
+Hometown %>%
+  ggplot(aes(x = longitude, y = latitude)) +
+  borders("state") +
+  geom_point(aes(color = "red")) +
+  labs(title = "Hometowns of Contestants",
+       x = "Longitude",
+       y = "Latitude")
+
+```
+
+
+```{r}
+Contestants %>%
+  left_join(Hometown, by = c("hometown" = "city")) %>%
+  group_by(hometown) %>%
+  summarise(count = n()) %>%
+  arrange(desc(count)) %>%
+  top_n(10) %>%
+  ggplot(aes(x = reorder(hometown, count), y = count)) +
+  geom_col() +
+  coord_flip() +
+  labs(title = "Top 10 Hometowns of Contestants",
+       x = "Hometown",
+       y = "Count")
+
+```{r}
+# what is the average age of the contestants by season?
 
