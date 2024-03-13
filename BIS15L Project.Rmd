@@ -14,43 +14,39 @@ library(tidyverse)
 library(janitor)
 library(here)
 ```
-
+Data of all 41 seasons of The BAchelor and The Bachelortte:
 ```{r}
-season_details <- read.csv("season_details.csv")%>% clean_names()
+#season_details <- read.csv("season_details.csv")%>% clean_names()
 ```
-
+1. Structure of this data set:
 ```{r}
 glimpse(season_details)
 ```
 
-```{r}
-head(season_details)
-```
-
+2. New data set that only contains the seasons in which the couples are still together:
 ```{r}
 still_together<- season_details%>%
   group_by(season, full_name, still_together)%>%
   filter(still_together=="TRUE")
 ```
 
+3. How many couples, from all 41 seasons, are still together?
 ```{r}
 count(still_together, season)
 ```
-Make a plot to show the number of couples still together by season. 
+
+4. Make a plot to show the number of couples still together by season. 
 ```{r}
 ggplot(still_together, aes(x=season, y=full_name))+
   geom_col(fill = "darkred", alpha=0.8)+
   coord_flip()+
-  labs(title="Number of Couples Still Together by Season", x="Season", y="Number of Couples")+
+  labs(title="Couples Still Together by Season", x="Season", y="Couples")+
   theme(axis.text.x = element_text(angle = 60, hjust = 1),
         plot.title = element_text(size = 14, face="bold"))+
   geom_text(aes(label = season), vjust = -0.2, size = 3, color = "black")
 ```
-```{r}
-colours()
-```
 
-Make a plot that shows all of the couples.
+5. Make a plot that shows all of the couples.
 ```{r}
 ggplot(season_details, aes(x=season, y=full_name, fill=still_together))+
   geom_col()+
@@ -59,62 +55,31 @@ ggplot(season_details, aes(x=season, y=full_name, fill=still_together))+
   theme(axis.text.x=element_text(angle=90, hjust = 1))
 ```
 
-
-
-
-
-
-
-
+Data Set 2 which shows the hometowns of the last few contestants in each season:
 ```{r}
-hometowns <- read.csv("hometown_coordinates.csv")%>% clean_names()
+#hometowns <- read.csv("hometown_coordinates.csv")%>% clean_names()
 ```
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+Data set 3 which shows the contestants that got eliminated throughout each season:
 ```{r}
-eliminations <- read.csv("eliminations_and_dates.csv")%>% clean_names()
+#eliminations <- read.csv("eliminations_and_dates.csv")%>% clean_names()
 ```
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+Data set 4 which shows the names of all the contestants in each season:
 ```{r}
 contestants <- read.csv("contestant_details.csv")%>% clean_names()
 ```
 
-
-
-How many contestants are in each season?
+6. How many contestants are in each season?
 ```{r}
-count(contestants, season)
-
+contestant_details%>%
+count(unique_id, season)
 ```
-Make a plot that shows the number of contestants in each season.
+
+7. Make a plot that shows the number of contestants in each season.
 ```{r}
-ggplot(contestants, aes(x=season))+
+contestant_details%>%
+ggplot(aes(x=season))+
   geom_bar(fill = "darkred", alpha=0.8)+
   labs(title="Number of Contestants by Season", x="Season", y="Number of Contestants")+
   theme(axis.text.x = element_text(angle = 60, hjust = 1),
@@ -123,19 +88,9 @@ ggplot(contestants, aes(x=season))+
 
 ```
 
-
-
-
-
-
-
-
-
-
-
-
+Data set 4 which shows more eliminations:
 ```{r}
-compact_eliminations <- read.csv("eliminations_and_dates_compact.csv") %>% clean_names()
+#compact_eliminations <- read.csv("eliminations_and_dates_compact.csv") %>% clean_names()
 ```
 
 
