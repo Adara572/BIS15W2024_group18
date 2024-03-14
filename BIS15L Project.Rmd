@@ -1,5 +1,5 @@
 ---
-title: "The Bachelor"
+title: "The Bachelor/Bachelorette"
 output: html_document
 date: "2024-03-07"
 ---
@@ -14,10 +14,12 @@ library(tidyverse)
 library(janitor)
 library(here)
 ```
+
 Data of all 41 seasons of The BAchelor and The Bachelortte:
 ```{r}
 #season_details <- read.csv("season_details.csv")%>% clean_names()
 ```
+
 1. Structure of this data set:
 ```{r}
 glimpse(season_details)
@@ -51,7 +53,7 @@ ggplot(still_together, aes(x=season, y=full_name))+
 ggplot(season_details, aes(x=season, y=full_name, fill=still_together))+
   geom_col()+
   coord_flip()+
-  labs(title="Couple's Relationship Status by Season", x="Season", y="Name of Couples")+
+  labs(title="Couple's Relationship Status by Season", x="Season", y="Name of Bachelor/Bachelorette")+
   theme(axis.text.x=element_text(angle=90, hjust = 1))
 ```
 
@@ -85,7 +87,6 @@ ggplot(aes(x=season))+
   theme(axis.text.x = element_text(angle = 60, hjust = 1),
         plot.title = element_text(size = 14, face="bold"))+
   geom_text(stat = "count", aes(label = ..count..), vjust = -0.2, size = 3, color = "black")
-
 ```
 
 Data set 4 which shows more eliminations:
@@ -93,15 +94,69 @@ Data set 4 which shows more eliminations:
 #compact_eliminations <- read.csv("eliminations_and_dates_compact.csv") %>% clean_names()
 ```
 
+8. Build an app that shows all of the couples that are still together:
 
+```{r}
+library(tidyverse)
+library(RColorBrewer)
+library(janitor)
+library(here)
+library(shiny)
+library(shinydashboard)
+library(lubridate)
 
+```
 
+Make an app that allows the user to select a season of the each show and information about the season will be displayed.
 
+```{r}
+ui <- dashboardPage(
+  
+  dashboardHeader(title = "The Bachelor"),
+  
+  dashboardSidebar(disable=T),
+  
+  dashboardBody(
+  fluidRow(
+  box(
+    
+    selectInput("season", "Select Season", choices = c("1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "31", "32", "33", "34", "35", "36", "37", "38", "39", "40", "41"), selected = "1"),
+  
+    selectInput("show", "Select Show", choices = c("The Bachelor", "The Bachelorette"), selected = "The Bachelor"),
 
+), # close the first box  
 
+server <- function(input, output, session) {
+  observe({
+    new_choices <- unique(filter(season, category == tolower(input$cat))$name)
+    updateSelectInput(session, "spec", 
+                      choices = new_choices)
+  })
+  
+```
 
+```{r}
+shinyApp(ui, server)
+```
 
+Make an app that shows the name of the winners of The Bachelor and The Bachelorette for each season. 
 
+```{r}
+server <- function(input, output, session) {
+  output$winner <- renderTable({
+    eliminations_and_dates%>%
+      filter(season == input$season, show == input$show)%>%
+      select(W)
+  })
+  output$runner_up <- renderTable({
+    season_details%>%
+      filter(season == input$season, show == input$show)%>%
+      select(runner_up)
+  })
+}
+```
 
-
+```{r}
+shinyApp(ui, server)
+```
 
