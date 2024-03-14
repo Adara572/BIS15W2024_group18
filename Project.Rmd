@@ -7,7 +7,17 @@ date: "2024-02-29"
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+## Load the libraries
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+library(janitor)
+```
 
+## Install and load the `ggmap` package  
+```{r message=FALSE, warning=FALSE}
+#install.packages("ggmap")
+library(ggmap)
+```
 ## R Markdown
 
 #questions were exploring 
@@ -20,30 +30,42 @@ knitr::opts_chunk$set(echo = TRUE)
 7. Is there a correlation between the age of the contestant and the success rate?
 8. Is there a trend in occupation of the contestants?
 ```{r}
-Eliminations<- read.csv("eliminations_and_dates.csv") %>% clean_names()
+Eliminations<- read.csv("data/eliminations_and_dates.csv") %>% clean_names()
 ```
 
 
 ```{r}
-Hometown<- read.csv("hometown_coordinates.csv") %>% clean_names()
+Hometown<- read.csv("data/hometown_coordinates.csv") %>% clean_names()
 
 ```
 
 ```{r}
-Seasons<- read.csv("season_details.csv") %>% clean_names()
+Seasons<- read.csv("data/season_details.csv") %>% clean_names()
 ```
 
 
 ```{r}
-Contestants <- read.csv("contestant_details.csv") %>% clean_names()
+Contestants <- read.csv("data/contestant_details.csv") %>% clean_names()
 ```
 
 ```{r}
-Compact_eliminations <- read.csv("eliminations_and_dates_compact.csv") %>% clean_names()
+Compact_eliminations <- read.csv("data/eliminations_and_dates_compact.csv") %>% clean_names()
+```
+
+## what is the most popular name of the contestants
+```{r}
+Contestants %>%
+  separate(full_name, c("first_name", "last_name"), sep = " ") %>%
+  group_by(first_name) %>%
+  summarise(count = n()) %>%
+  arrange(desc(count))
 ```
 
 
-# what is the maximun and minimum age of the contestants?
+
+
+
+## what is the maximun and minimum age of the contestants?
 ```{r}
 Contestants %>%
   summarise(max_age = max(age, na.rm = TRUE),
@@ -51,31 +73,59 @@ Contestants %>%
 ```
 
 
-#1 What is the average age of the contestants?
+##1 What is the average age of the contestants?
 ```{r}
 Contestants %>%
   summarise(mean_age = mean(age, na.rm = TRUE))
 ```
-# what is the average age of the contestants by season?
+## what is the average age of the contestants by season?
 ```{r}
 Contestants %>%
   group_by(season) %>%
   summarise(mean_age = mean(age, na.rm = TRUE))
 ```
 
+how many seasons of the bachelor and bachelorette are there?
+```{r}
+Seasons %>%
+  group_by(show) %>%
+  summarise(count = n())
+
+```
 
 
-#build a graph that shows the average age of the contestants by season
+
+##Use a bar plot to compare the average age of the contestants between the two shows
+
 ```{r}
 Contestants %>%
   group_by(season) %>%
+  filter(show=="Bachelor") %>%
   summarise(mean_age = mean(age, na.rm = TRUE)) %>%
   ggplot(aes(x = season, y = mean_age)) +
-  geom_col() +
-  labs(title = "Average Age of Contestants by Season",
+  geom_col(fill="palevioletred", color="darkred", alpha=0.8) +
+  labs(title = "Average Age of Contestants on The Bachelor",
        x = "Season",
-       y = "Average Age")
+       y = "Average Age")+
+  theme(plot.title = element_text(size=14, face="bold"))+
+  geom_text(aes(label=round(mean_age)), vjust=-0.3, size=3.5)
+
 ```
+
+```{r}
+Contestants %>%
+  group_by(season) %>%
+  filter(show=="Bachelorette") %>%
+  summarise(mean_age = mean(age, na.rm = TRUE)) %>%
+  ggplot(aes(x = season, y = mean_age)) +
+  geom_col(fill="palevioletred", color="darkred", alpha=0.8) +
+  labs(title = "Average Age of Contestants on The Bachelorette",
+       x = "Season",
+       y = "Average Age")+
+  theme(plot.title = element_text(size=14, face="bold"))+
+  geom_text(aes(label=round(mean_age)), vjust=-0.3, size=3.5)
+```
+
 
 
 #make a table of all of the occupations of the contestants
@@ -86,42 +136,107 @@ Contestants %>%
   arrange(desc(count))
 ```
 
-# make a graph that shows the trend in occupation of the contestants, make the graph pink
+
+## make a graph that shows the trend in occupation of the contestants, make the graph pink
 
 ```{r}
 Contestants %>%
   group_by(occupation) %>%
+  filter(show=="Bachelor") %>%
   summarise(count = n()) %>%
   arrange(desc(count)) %>%
   top_n(10) %>%
   ggplot(aes(x = reorder(occupation, count), y = count)) +
-  geom_col() +
+  geom_col(fill="palevioletred", color="darkred", alpha=0.8) +
   coord_flip() +
-  labs(title = "Top 10 Occupations of Contestants",
+  labs(title = "Top 10 Occupations of Contestants on The Bachelor",
        x = "Occupation",
        y = "Count")
 ```
 
-#make a grapgh that show the trend in hometown of the contestants
+```{r}
+Contestants %>%
+  group_by(occupation) %>%
+  filter(show=="Bachelorette") %>%
+  summarise(count = n()) %>%
+  arrange(desc(count)) %>%
+  top_n(10) %>%
+  ggplot(aes(x = reorder(occupation, count), y = count)) +
+  geom_col(fill="palevioletred", color="darkred", alpha=0.8) +
+  coord_flip() +
+  labs(title = "Top 10 Occupations of Contestants on The Bachelorette",
+       x = "Occupation",
+       y = "Count")
+```
+
+
+
+use the season data to find the top 10 occupations of the bachelor and bachelorette canadidates by season, combine the repeating occupations
+```{r}
+Seasons %>%
+  group_by(occupation) %>%
+  filter(show=="Bachelor") %>%
+  summarise(count = n()) %>%
+  arrange(desc(count))
+```
+
+
+#make a graph that show the trend in hometown of the contestants
 ```{r}
 Contestants %>%
   left_join(Hometown, by = c("hometown" = "city")) %>%
   group_by(hometown) %>%
+  filter(show=="Bachelor") %>%
   summarise(count = n()) %>%
   arrange(desc(count)) %>%
   top_n(10) %>%
   ggplot(aes(x = reorder(hometown, count), y = count)) +
-  geom_col() +
+  geom_col(fill="palevioletred", color="darkred", alpha=0.8) +
   coord_flip() +
-  labs(title = "Top 10 Hometowns of Contestants",
+  labs(title = "Top 10 Hometowns of Contestants on The Bachelor",
        x = "Hometown",
-       y = "Count")
+       y = "Count")+
+ theme(plot.title = element_text(size=14, face="bold"))+
+  geom_text(aes(label=count), vjust=1, size=3.5)
 
 ```
+
+```{r}
+Contestants %>%
+  left_join(Hometown, by = c("hometown" = "city")) %>%
+  group_by(hometown) %>%
+  filter(show=="Bachelorette") %>%
+  summarise(count = n()) %>%
+  arrange(desc(count)) %>%
+  top_n(10) %>%
+  ggplot(aes(x = reorder(hometown, count), y = count)) +
+  geom_col(fill="palevioletred", color="darkred", alpha=0.8) +
+  coord_flip() +
+  labs(title = "Top 10 Hometowns of Contestants on The Bachelorette",
+       x = "Hometown",
+       y = "Count")+
+ theme(plot.title = element_text(size=14, face="bold"))+
+  geom_text(aes(label=count), vjust=1, size=3.5)
+
+```
+add the long and lat to the contestants data
+```{r}
+Contestants %>%
+  left_join(Hometown, by = c("hometown" = "city")) %>%
+  select(full_name, age, occupation, hometown)
+```
+
+
+
+
+
+
+
+
 # make a map of the hometowns of the contestants
 
 ```{r}
-register_stadiamaps("4592a21f-00fe-42be-b871-7a71b02c2a12", write = FALSE)
+register_stadiamaps("4e32b9b8-f5a9-4134-810b-1c546c2a9800", write = FALSE)
 ```
 
 ```{r}
@@ -131,47 +246,289 @@ Hometown %>%
 ```
 
 ```{r}
-lat <- c(55.02, 70.37)
-long <- c(-166.2, -131.3)
+lat <- c(-34.60, 61.21)
+long <- c(-157.83, 123.33)
 bbox <- make_bbox(long, lat, f = 0.03)
 ```
 
 ```{r}
-map1 <- get_stadiamap(bbox, maptype = "stamen_terrain", zoom=7)
+map1 <- get_stadiamap(bbox, maptype = "stamen_terrain", zoom=4)
 ```
+
 
 ```{r}
 ggmap(map1) +
-  geom_point(data = grizzly, aes(longitude, latitude), size=0.4)+
-  labs(x="Longitude", y="Latitude", title= "Bear Locations")
-```
-
-```{r}
-Hometown %>%
-  ggplot(aes(x = longitude, y = latitude)) +
-  borders("state") +
-  geom_point(aes(color = "red")) +
-  labs(title = "Hometowns of Contestants",
-       x = "Longitude",
-       y = "Latitude")
-
+  geom_point(data = Hometown, aes(long, lat), size=0.4)+
+  labs(x="Longitude", y="Latitude", title= "Hometowns")+
+  theme(plot.title = element_text(size=14, face="bold"))
 ```
 
 
+
+# Im going to make a cleaner data set that combines the eliminations data with the contestants data so I can see who received a rose because i'm having trouble working with the full_names column and homerange. And there's recorded data in the action column that i want to remove.
 ```{r}
-Contestants %>%
+states <- Contestants %>%
   left_join(Hometown, by = c("hometown" = "city")) %>%
-  group_by(hometown) %>%
+  select(full_name, age, occupation, hometown, show) %>% 
+  separate(hometown, c("city", "state"), sep = ", ") %>% 
+  separate(full_name, c("first_name", "last_name"), sep = " ")
+  
+states
+```
+
+```{r}
+new_eliminations <- Eliminations %>%
+  separate(full_name, c("first_name", "last_name"), sep = " ")
+new
+```
+#combine that states data with the new_eliminations data
+```{r}
+improved_data <- new_eliminations %>%
+  left_join(states, by = c("first_name", "last_name")) %>% 
+  select(-unique_id)
+improved_data
+
+```
+
+```{r}
+improved_data1 <- improved_data %>% 
+  filter(action == c("R1", "R")) %>% 
+  select(-show.y)
+improved_data1
+```
+##I'm seeing how many contestants from the bachelor and bachelorette receieved a rose, to show their popularity
+
+```{r}
+improved_data1 %>%
+  group_by(first_name, action) %>%
+  filter(show.x=="Bachelor") %>%
+  summarise(count = n()) %>%
+  arrange(desc(count))
+```
+
+```{r}
+improved_data1 %>%
+  group_by(first_name) %>%
+  filter(show.x=="Bachelorette") %>%
+  summarise(count = n()) %>%
+  arrange(desc(count))
+```
+
+##make a bar graph with the improved_data that the shows that most popular names of the contestants
+```{r}
+improved_data1 %>%
+  group_by(first_name) %>%
+  filter(show.x=="Bachelor") %>%
   summarise(count = n()) %>%
   arrange(desc(count)) %>%
   top_n(10) %>%
-  ggplot(aes(x = reorder(hometown, count), y = count)) +
-  geom_col() +
+  ggplot(aes(x = reorder(first_name, count), y = count)) +
+  geom_col(fill="palevioletred", color="darkred", alpha=0.8) +
   coord_flip() +
-  labs(title = "Top 10 Hometowns of Contestants",
-       x = "Hometown",
-       y = "Count")
+  labs(title = "Names that received the most roses",
+       x = "Name",
+       y = "Number of Roses")+
+ theme(plot.title = element_text(size=14, face="bold"))
+```
+```{r}
+improved_data1 %>%
+  group_by(first_name) %>%
+  filter(show.x=="Bachelorette") %>%
+  summarise(count = n()) %>%
+  arrange(desc(count)) %>%
+  top_n(10) %>%
+  ggplot(aes(x = reorder(first_name, count), y = count)) +
+  geom_col(fill="palevioletred", color="darkred", alpha=0.8) +
+  coord_flip() +
+  labs(title = "Names that received the most roses",
+       x = "Name",
+       y = "Name of Roses")+
+ theme(plot.title = element_text(size=14, face="bold"))
+```
+
+##
+```{r}
+improved_data1 %>%
+  filter(!is.na(state)) %>%
+  group_by(state) %>%
+  filter(show.x=="Bachelorette") %>%
+  summarise(count = n()) %>%
+  arrange(desc(count)) %>%
+  top_n(10) %>%
+  ggplot(aes(x = reorder(state, count), y = count)) +
+  geom_col(fill="palevioletred", color="darkred", alpha=0.8) +
+  coord_flip() +
+  labs(title = "States that received the most roses on The Bachelorette",
+       x = "States",
+       y = "Number of Roses")+
+ theme(plot.title = element_text(size=14, face="bold"))
+
+```
+```{r}
+improved_data1 %>%
+  filter(!is.na(state)) %>%
+  group_by(state) %>%
+  filter(show.x=="Bachelor") %>%
+  summarise(count = n()) %>%
+  arrange(desc(count)) %>%
+  top_n(10) %>%
+  ggplot(aes(x = reorder(state, count), y = count)) +
+  geom_col(fill="palevioletred", color="darkred", alpha=0.8) +
+  coord_flip() +
+  labs(title = "States that received the most roses on The Bachelor",
+       x = "States",
+       y = "Number of Roses")+
+ theme(plot.title = element_text(size=14, face="bold"))
+```
+##
+```{r}
+improved_data1 %>%
+  filter(!is.na(age)) %>%
+  group_by(age) %>%
+  filter(show.x=="Bachelor") %>%
+  summarise(count = n()) %>%
+  arrange(desc(count)) %>%
+  top_n(10) %>%
+  ggplot(aes(x = reorder(age, count), y = count)) +
+  geom_col(fill="palevioletred", color="darkred", alpha=0.8) +
+  coord_flip() +
+  labs(title = "Age that received the most roses on The Bachelor",
+       x = "Age",
+       y = "Number of Roses")+
+ theme(plot.title = element_text(size=14, face="bold"))
+```
+```{r}
+improved_data1 %>%
+  filter(!is.na(age)) %>%
+  group_by(age) %>%
+  filter(show.x=="Bachelorette") %>%
+  summarise(count = n()) %>%
+  arrange(desc(count)) %>%
+  top_n(10) %>%
+  ggplot(aes(x = reorder(age, count), y = count)) +
+  geom_col(fill="palevioletred", color="darkred", alpha=0.8) +
+  coord_flip() +
+  labs(title = "Age that received the most roses on The Bachelorette",
+       x = "Age",
+       y = "Number of Roses")+
+ theme(plot.title = element_text(size=14, face="bold"))
+```
 
 ```{r}
-# what is the average age of the contestants by season?
+improved_data1 %>%
+  filter(!is.na(occupation)) %>%
+  group_by(occupation) %>%
+  filter(show.x=="Bachelor") %>%
+  summarise(count = n()) %>%
+  arrange(desc(count)) %>%
+  top_n(10) %>%
+  ggplot(aes(x = reorder(occupation, count), y = count)) +
+  geom_col(fill="palevioletred", color="darkred", alpha=0.8) +
+  coord_flip() +
+  labs(title = "Occupation that received the most roses on The Bachelor",
+       x = "Occupation",
+       y = "Number of Roses")+
+ theme(plot.title = element_text(size=14, face="bold"))
+```
+##
+```{r}
+improved_data1 %>%
+  filter(!is.na(occupation)) %>%
+  group_by(occupation) %>%
+  filter(show.x=="Bachelorette") %>%
+  summarise(count = n()) %>%
+  arrange(desc(count)) %>%
+  top_n(10) %>%
+  ggplot(aes(x = reorder(occupation, count), y = count)) +
+  geom_col(position="dodge", fill="palevioletred", color="darkred", alpha=0.8) +
+  coord_flip() +
+  labs(title = "Occupation that received the most roses on The Bachelorette",
+       x = "Occupation",
+       y = "Number of Roses")+
+ theme(plot.title = element_text(size=14, face="bold"))
+```
+
+make a plot that shows which occupation received the most roses 
+```{r}
+
+
+
+use the Eliminations data to make a new column that shows if the contestant received the first impression rose
+```{r}
+Eliminations %>%
+  mutate(first_impression_rose = ifelse(action == "R1", "Yes", "No")) %>%
+  group_by(first_impression_rose) %>% 
+  filter(first_impression_rose == "Yes") %>% 
+  filter(show=="Bachelor") %>% 
+  count()
+```
+```{r}
+Eliminations %>%
+  mutate(first_impression_rose = ifelse(action == "R1", "Yes", "No")) %>%
+  group_by(first_impression_rose) %>% 
+  filter(first_impression_rose == "Yes") %>% 
+  filter(show=="Bachelorette") %>% 
+  count()
+```
+
+
+
+```{r}
+Eliminations %>%
+  mutate(first_impression_rose = ifelse(action == "R1", "Yes", "No")) %>%
+  group_by(show, first_impression_rose) %>%
+  filter(first_impression_rose == "Yes") %>%
+  summarise(count = n()) %>%
+  ggplot(aes(x = show, y = count, fill = show)) +
+  geom_col(fill="palevioletred", color="darkred", alpha=0.8) +
+  labs(title = "Number of First Impression Roses by Show",
+       x = "Show",
+       y = "Count",
+       fill = "Show")
+
+```
+
+
+```{r}
+first_impression_rose <- Eliminations %>%
+  mutate(first_impression_rose = ifelse(action == "R1", "Yes", "No")) %>% 
+  filter(first_impression_rose == "Yes")
+first_impression_rose
+```
+
+make a shiny app all the details of seasons of the bachelor and bachelorette
+```{r}
+library(shiny)
+```
+
+
+##using the Seasons dataset make a graph that compares the number of proposals on the bachelor and bachelorette
+```{r}
+Seasons %>%
+  group_by(show) %>%
+  filter(proposal=="TRUE") %>%
+  summarise(count = n()) %>%
+  ggplot(aes(x = show, y = count, fill = show)) +
+  geom_col() +
+  labs(title = "Number of Proposals by Show",
+       x = "Show",
+       y = "Count",
+       fill = "Show")
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
