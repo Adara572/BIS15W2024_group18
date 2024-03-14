@@ -17,7 +17,7 @@ library(here)
 
 Data of all 41 seasons of The BAchelor and The Bachelortte:
 ```{r}
-#season_details <- read.csv("season_details.csv")%>% clean_names()
+season_details <- read.csv("data/season_details.csv")
 ```
 
 1. Structure of this data set:
@@ -34,8 +34,39 @@ still_together<- season_details%>%
 
 3. How many couples, from all 41 seasons, are still together?
 ```{r}
-count(still_together, season)
+Bachelor<- still_together%>%
+  filter(show=="Bachelor")%>%
+  count(still_together, show)
 ```
+
+```{r}
+Bachelor%>%
+  ggplot(aes(x=season, y=full_name))+
+  geom_col(fill = "darkred", alpha=0.8)+
+  coord_flip()+
+  labs(title="Couples Still Together by Season", x="Season", y="Couples")+
+  theme(axis.text.x = element_text(angle = 60, hjust = 1),
+        plot.title = element_text(size = 14, face="bold"))+
+  geom_text(aes(label = season), vjust = -0.2, size = 3, color = "black")
+```
+
+```{r}
+Bachelorette<- still_together%>%
+  filter(show=="Bachelorette")%>%
+  count(still_together, show)
+```
+
+```{r}
+Bachelorette%>%
+  ggplot(aes(x=season, y=full_name))+
+  geom_col(fill = "darkred", alpha=0.8)+
+  coord_flip()+
+  labs(title="Couples Still Together by Season", x="Season", y="Couples")+
+  theme(axis.text.x = element_text(angle = 60, hjust = 1),
+        plot.title = element_text(size = 14, face="bold"))+
+  geom_text(aes(label = season), vjust = -0.2, size = 3, color = "black")
+```
+
 
 4. Make a plot to show the number of couples still together by season. 
 ```{r}
@@ -59,28 +90,28 @@ ggplot(season_details, aes(x=season, y=full_name, fill=still_together))+
 
 Data Set 2 which shows the hometowns of the last few contestants in each season:
 ```{r}
-#hometowns <- read.csv("hometown_coordinates.csv")%>% clean_names()
+hometowns <- read.csv("data/hometown_coordinates.csv")
 ```
 
 Data set 3 which shows the contestants that got eliminated throughout each season:
 ```{r}
-#eliminations <- read.csv("eliminations_and_dates.csv")%>% clean_names()
+eliminations <- read.csv("data/eliminations_and_dates.csv")
 ```
 
 Data set 4 which shows the names of all the contestants in each season:
 ```{r}
-contestants <- read.csv("contestant_details.csv")%>% clean_names()
+contestants <- read.csv("data/contestant_details.csv")
 ```
 
 6. How many contestants are in each season?
 ```{r}
-contestant_details%>%
-count(unique_id, season)
+contestants%>%
+count(full_name, season)
 ```
 
 7. Make a plot that shows the number of contestants in each season.
 ```{r}
-contestant_details%>%
+contestants%>%
 ggplot(aes(x=season))+
   geom_bar(fill = "darkred", alpha=0.8)+
   labs(title="Number of Contestants by Season", x="Season", y="Number of Contestants")+
@@ -91,72 +122,74 @@ ggplot(aes(x=season))+
 
 Data set 4 which shows more eliminations:
 ```{r}
-#compact_eliminations <- read.csv("eliminations_and_dates_compact.csv") %>% clean_names()
+compact_eliminations <- read.csv("data/eliminations_and_dates_compact.csv") 
 ```
 
 8. Build an app that shows all of the couples that are still together:
 
-```{r}
+```{r message=FALSE, warning=FALSE}
 library(tidyverse)
 library(RColorBrewer)
+library(paletteer)
 library(janitor)
 library(here)
 library(shiny)
 library(shinydashboard)
 library(lubridate)
-
 ```
 
-Make an app that allows the user to select a season of the each show and information about the season will be displayed.
-
+App for the Bachelorette
 ```{r}
-ui <- dashboardPage(
-  
-  dashboardHeader(title = "The Bachelor"),
-  
-  dashboardSidebar(disable=T),
-  
-  dashboardBody(
-  fluidRow(
-  box(
-    
-    selectInput("season", "Select Season", choices = c("1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "31", "32", "33", "34", "35", "36", "37", "38", "39", "40", "41"), selected = "1"),
-  
-    selectInput("show", "Select Show", choices = c("The Bachelor", "The Bachelorette"), selected = "The Bachelor"),
-
-), # close the first box  
+ui <- fluidPage(titlePanel("The Bachelor and The Bachelorette"),
+                radioButtons("x", "Select Fill Variable", choices=c("Bachelor", "Bachelorette"), selected="Bachelor"),
+                plotOutput("plot", width="600px", height="500px")
+)
 
 server <- function(input, output, session) {
-  observe({
-    new_choices <- unique(filter(season, category == tolower(input$cat))$name)
-    updateSelectInput(session, "spec", 
-                      choices = new_choices)
+  output$plot <- renderPlot({
+  ggplot(Bachelor, aes(x=season, y=full_name))+
+  geom_col(fill = "darkred", alpha=0.8)+
+  coord_flip()+
+  labs(title="Couples Still Together by Season", x="Season", y="Couples")+
+  theme(axis.text.x = element_text(angle = 60, hjust = 1),
+        plot.title = element_text(size = 14, face="bold"))+
+  geom_text(aes(label = season), vjust = -0.2, size = 3, color = "black")
   })
   
-```
-
-```{r}
-shinyApp(ui, server)
-```
-
-Make an app that shows the name of the winners of The Bachelor and The Bachelorette for each season. 
-
-```{r}
-server <- function(input, output, session) {
-  output$winner <- renderTable({
-    eliminations_and_dates%>%
-      filter(season == input$season, show == input$show)%>%
-      select(W)
-  })
-  output$runner_up <- renderTable({
-    season_details%>%
-      filter(season == input$season, show == input$show)%>%
-      select(runner_up)
-  })
+  output$plot <- renderPlot({
+  ggplot(Bachelorette, aes(x=season, y=full_name))+
+  geom_col(fill = "darkred", alpha=0.8)+
+  coord_flip()+
+  labs(title="Couples Still Together by Season", x="Season", y="Couples")+
+  theme(axis.text.x = element_text(angle = 60, hjust = 1),
+        plot.title = element_text(size = 14, face="bold"))+
+  geom_text(aes(label = season), vjust = -0.2, size = 3, color = "black")
+})
 }
-```
-
-```{r}
 shinyApp(ui, server)
 ```
+
+App for the Bachelor
+```{r}
+ui <- fluidPage(titlePanel("The Bachelor and The Bachelorette"),
+                radioButtons("x", "Select Fill Variable", choices=c("Bachelor", "Bachelorette"), selected="Bachelor"),
+                plotOutput("plot", width="600px", height="500px")
+)
+
+server <- function(input, output, session) {
+  output$plot <- renderPlot({
+  ggplot(Bachelor, aes(x=season, y=full_name))+
+  geom_col(fill = "darkred", alpha=0.8)+
+  coord_flip()+
+  labs(title="Couples Still Together by Season", x="Season", y="Couples")+
+  theme(axis.text.x = element_text(angle = 60, hjust = 1),
+        plot.title = element_text(size = 14, face="bold"))+
+  geom_text(aes(label = season), vjust = -0.2, size = 3, color = "black")
+  })
+  
+}
+
+shinyApp(ui, server)
+```
+
 
