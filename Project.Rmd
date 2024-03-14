@@ -57,6 +57,15 @@ Compact_eliminations <- read.csv("data/eliminations_and_dates_compact.csv") %>% 
 Contestants %>%
   separate(full_name, c("first_name", "last_name"), sep = " ") %>%
   group_by(first_name) %>%
+  filter(show=="Bachelor") %>%
+  summarise(count = n()) %>%
+  arrange(desc(count))
+```
+```{r}
+Contestants %>%
+  separate(full_name, c("first_name", "last_name"), sep = " ") %>%
+  group_by(first_name) %>%
+  filter(show=="Bachelorette") %>%
   summarise(count = n()) %>%
   arrange(desc(count))
 ```
@@ -95,7 +104,35 @@ Seasons %>%
 
 
 
-##Use a bar plot to compare the average age of the contestants between the two shows
+##Use a geom _col plot to compare the average age of the contestants between the two shows
+```{r}
+Contestants %>%
+  group_by(show) %>%
+  summarise(mean_age = mean(age, na.rm = TRUE)) %>%
+  ggplot(aes(x = show, y = mean_age, fill = show)) +
+  geom_col(fill="palevioletred", color="darkred", alpha=0.8) +
+  labs(title = "Average Age of Contestants by Show",
+       x = "Show",
+       y = "Average Age",
+       fill = "Show")+
+  theme(plot.title = element_text(size=14, face="bold"))+
+geom_text(aes(label=round(mean_age)), vjust=-0.3, size=3.5)
+
+```
+
+```{r}
+Contestants %>%
+  group_by(show) %>%
+  summarise(mean_age = mean(age, na.rm = TRUE)) %>%
+  ggplot(aes(x = show, y = mean_age, color = show)) +
+  geom_point() +
+  labs(title = "Average Age of Contestants by Show",
+       x = "Show",
+       y = "Average Age",
+       color = "Show")
+
+```
+
 
 ```{r}
 Contestants %>%
@@ -179,6 +216,23 @@ Seasons %>%
   summarise(count = n()) %>%
   arrange(desc(count))
 ```
+
+
+
+```{r}
+Contestants %>%
+  left_join(Hometown, by = c("hometown" = "city")) %>%
+  group_by(hometown) %>%
+  filter(show=="Bachelor") %>%
+  select(hometown, show) %>%
+  summarise(count = n()) %>%
+  arrange(desc(count)) %>%
+  top_n(10)
+```
+
+
+  
+
 
 
 #make a graph that show the trend in hometown of the contestants
@@ -289,22 +343,46 @@ improved_data <- new_eliminations %>%
 improved_data
 
 ```
+#Names with the most wins
+```{r}
+improved_dataW <- improved_data %>% 
+  filter(action == c("W")) %>% 
+  select(-show.y)
+```
 
+```{r}
+improved_dataW %>%
+  group_by(first_name) %>%
+  filter(show.x=="Bachelor") %>%
+  summarise(count = n()) %>%
+  arrange(desc(count))
+```
+
+# made data set with only the roses given out
 ```{r}
 improved_data1 <- improved_data %>% 
   filter(action == c("R1", "R")) %>% 
   select(-show.y)
 improved_data1
 ```
-##I'm seeing how many contestants from the bachelor and bachelorette receieved a rose, to show their popularity
+#show the number of roses given out between the bachelor and bachelorette
 
 ```{r}
 improved_data1 %>%
-  group_by(first_name, action) %>%
+  filter(show.x=="Bachelorette") %>%
+  summarise(count = n()) %>%
+  arrange(desc(count))
+```
+
+```{r}
+improved_data1 %>%
   filter(show.x=="Bachelor") %>%
   summarise(count = n()) %>%
   arrange(desc(count))
 ```
+
+
+
 
 ```{r}
 improved_data1 %>%
@@ -315,6 +393,25 @@ improved_data1 %>%
 ```
 
 ##make a bar graph with the improved_data that the shows that most popular names of the contestants
+```{r}
+improved_data1 %>%
+  group_by(show.x) %>%
+  summarise(mean_age = mean(age, na.rm = TRUE))
+```
+
+```{r}
+improved_data1 %>%
+  group_by(show.x) %>%
+  summarise(mean_age = mean(age, na.rm = TRUE)) %>%
+  ggplot(aes(x = show.x, y = mean_age, fill = show)) +
+  geom_col(fill="palevioletred", color="darkred", alpha=0.8) +
+  labs(title = "Average Age of Contestants who Received the most Roses",
+       x = "Show",
+       y = "Average Age",
+       fill = "Show")+
+  theme(plot.title = element_text(size=14, face="bold"))
+```
+
 ```{r}
 improved_data1 %>%
   group_by(first_name) %>%
@@ -448,12 +545,14 @@ improved_data1 %>%
  theme(plot.title = element_text(size=14, face="bold"))
 ```
 
+
+
+
+
 make a plot that shows which occupation received the most roses 
-```{r}
 
 
 
-use the Eliminations data to make a new column that shows if the contestant received the first impression rose
 ```{r}
 Eliminations %>%
   mutate(first_impression_rose = ifelse(action == "R1", "Yes", "No")) %>%
@@ -496,10 +595,6 @@ first_impression_rose <- Eliminations %>%
 first_impression_rose
 ```
 
-make a shiny app all the details of seasons of the bachelor and bachelorette
-```{r}
-library(shiny)
-```
 
 
 ##using the Seasons dataset make a graph that compares the number of proposals on the bachelor and bachelorette
@@ -509,11 +604,13 @@ Seasons %>%
   filter(proposal=="TRUE") %>%
   summarise(count = n()) %>%
   ggplot(aes(x = show, y = count, fill = show)) +
-  geom_col() +
+  geom_col(fill="palevioletred", color="darkred", alpha=0.8) +
   labs(title = "Number of Proposals by Show",
        x = "Show",
        y = "Count",
-       fill = "Show")
+       fill = "Show")+
+  theme(plot.title = element_text(size=14, face="bold"))+
+  geom_text(aes(label=count), vjust=1, size=3.5)
 
 ```
 
